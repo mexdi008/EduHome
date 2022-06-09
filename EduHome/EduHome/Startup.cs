@@ -8,11 +8,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DAL.Data;
+using Microsoft.Extensions.Configuration;
 
 namespace EduHome
 {
     public class Startup
     {
+        private readonly IConfiguration _config;
+        public Startup(IConfiguration config)
+        {
+            _config = config;
+        }
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -20,7 +27,10 @@ namespace EduHome
             services.AddControllersWithViews();
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer();
+                options.UseSqlServer(_config.GetConnectionString("default"),n =>
+                {
+                    n.MigrationsAssembly("EduHome");
+                });
             });
         }
 
@@ -37,6 +47,11 @@ namespace EduHome
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllerRoute(
+                    name: "admin",
+                    pattern: "{area:exists}/{controller=dashboard}/{action=index}/{id?}"
+                    );
+
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=home}/{action=index}/{id?}"
